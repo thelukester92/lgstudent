@@ -14,6 +14,7 @@ if(!defined("ABSPATH")) exit;
 require_once "inc/password.php";
 require_once "inc/lgdb.php";
 require_once "inc/lgmailer.php";
+require_once "inc/lgmarkdown.php";
 require_once "inc/lgutil.php";
 
 class LGStudent
@@ -323,67 +324,30 @@ class LGStudent
 		$questions = explode("# ", $content);
 		$content = "";
 		
-		for($i = 0; $i < count($questions); $i++)
+		$n = count($questions);
+		for($i = 0; $i < $n; ++$i)
 		{
 			$lines		= explode("\n", $questions[$i]);
 			$question	= array_shift($lines);
-			$lines		= array_map(function($line)
+			/* $lines		= array_map(function($line)
 			{
 				return preg_replace("/^(<p>)?>\s([^\n]+)/", '<span class="lgstudent-comment">$2</span>', $line);
-			}, $lines);
+			}, $lines); */
 			
 			$inside		= implode("\n", $lines);
 			$inside		= preg_replace("/\n\n+/", "\n", $inside);
 			
 			if($i > 0)
 			{
-				if(preg_match("/\*\s/", $inside))
-				{
-					$inside = "[lgradio]${inside}[/lgradio]";
-				}
-				else if(preg_match("/\[\]\s/", $inside))
-				{
-					$inside = "[lgcheckbox]${inside}[/lgcheckbox]";
-				}
-				
-				$content .= "<h2>Question $i: $question</h2>$inside";
+				$inside = LGMarkdown::parseExtended($inside);
+				if($n > 2)
+					$content .= "<h2>Question $i: $question</h2>$inside";
+				else
+					$content .= "<h2>$question</h2>$inside";
 			}
 			else
 			{
-				$lines = explode("\n", str_replace("<p>", "<p>\n", $inside));
-				
-				// MARK: markdown processor
-				// TODO: make a markdown processing class instead
-				$prevWasUl = false;
-				foreach($lines as &$line)
-				{
-					// lists
-					if(preg_match("/^\*\s(.+)/", $line, $matches))
-					{
-						if($prevWasUl)
-						{
-							$line = "<li>$matches[1]</li>";
-						}
-						else
-						{
-							$line = "<ul><li>$matches[1]</li>";
-						}
-						$prevWasUl = true;
-					}
-					else if($prevWasUl)
-					{
-						$line = "</ul>$line";
-					}
-					
-					// emphases
-					$line = preg_replace("/\*\*(.*)\*\*/", "<strong>$1</strong>", $line);
-					$line = preg_replace("/\*(.*)\*/", "<em>$1</em>", $line);
-					
-					// code
-					$line = preg_replace("/`(.*)`/", "<code>$1</code>", $line);
-				}
-				$inside = implode("\n", $lines);
-				$content .= $inside;
+				$content .= LGMarkdown::parse($inside);
 			}
 		}
 		?>
@@ -610,7 +574,7 @@ class LGStudent
 		if(!is_null($post) && $post->post_type == "lgstudent_assignment" && current_user_can("edit_posts", $post->ID))
 		{
 			update_post_meta($post->ID, "lgstudent_assignment_type", sanitize_text_field($_POST["lgstudent_assignment_type"]));
-			update_post_meta($post->ID, "lgstudent_assignment_expdate", strtotime($_POST["lgstudent_assignment_expdate"]));
+			update_post_meta($post->ID, "lgstudent_assignment_expdate", !empty($_POST["lgstudent_assignment_expdate"]) ? strtotime($_POST["lgstudent_assignment_expdate"]) : "");
 		}
 		
 		if(isset($_POST["notify"]))
@@ -746,7 +710,7 @@ class LGStudent
 		global $post, $wpdb;
 		$meta		= get_post_custom($post->ID);
 		$val		= isset($meta["lgstudent_assignment_type"]) ? $meta["lgstudent_assignment_type"][0] : "";
-		$exp		= isset($meta["lgstudent_assignment_expdate"]) ? date("D Y-m-d H:i:s", intval($meta["lgstudent_assignment_expdate"][0])) : "";
+		$exp		= (isset($meta["lgstudent_assignment_expdate"]) && !empty($meta["lgstudent_assignment_expdate"][0])) ? date("D Y-m-d H:i:s", intval($meta["lgstudent_assignment_expdate"][0])) : "";
 		$options	= array("lab" => "Lab","quiz" => "Quiz", "exam" => "Exam", "homework" => "Homework", "bonus" => "Bonus");
 		$students	= $this->db->getAllStudents();
 		?>
@@ -762,7 +726,7 @@ class LGStudent
 		<div style="clear: both;"</div><br />
 		
 		<div class="lgstudent-field">
-			<label for="lgstudent_assignment_expdate">Expiration</label><br />
+			<label for="lgstudent_assignment_expdate">Due Date</label><br />
 			<input type="text" name="lgstudent_assignment_expdate" value="<?=$exp?>" />
 		</div>
 		<div style="clear: both;"</div><br />
