@@ -3,7 +3,7 @@
 /*
  * Plugin Name:	LG Student
  * Plugin URI:	http://www.lukesterwebdesign.com/
- * Description:	This plugin includes a simple way to manage grades.
+ * Description:	This plugin includes a simple way to manage students, assignments, and grades.
  * Version:		1.0.0
  * Author:		Luke Godfrey
  * Author URI:	http://www.lukesterwebdesign.com

@@ -6,18 +6,17 @@ require_once "lgmailer.php";
 
 class LGDB
 {
+	private static $students_table	= "lgstudent_students";
+	private static $grades_table	= "lgstudent_grades";
+	
 	static function createTables()
 	{
 		global $wpdb;
-		
-		$students		= "{$wpdb->prefix}lgstudent_students";
-		$assignments	= "{$wpdb->prefix}lgstudent_assignments";
-		$grades			= "{$wpdb->prefix}lgstudent_grades";
-		$charset		= $wpdb->get_charset_collate();
+		$charset = $wpdb->get_charset_collate();
 		
 		$createStudents =
 		"
-		CREATE TABLE $students (
+		CREATE TABLE {$wpdb->prefix}" . self::$students_table . " (
 			email VARCHAR(100) NOT NULL,
 			password VARCHAR(100) NOT NULL,
 			firstName VARCHAR(100),
@@ -29,7 +28,7 @@ class LGDB
 		
 		$createGrades =
 		"
-		CREATE TABLE $grades (
+		CREATE TABLE {$wpdb->prefix}" . self::$grades_table . " (
 			user VARCHAR(100) NOT NULL,
 			assignment VARCHAR(100) NOT NULL,
 			grade INT(12) NOT NULL,
@@ -46,7 +45,7 @@ class LGDB
 	function checkPassword($email, $pass)
 	{
 		global $wpdb;
-		$user = $wpdb->get_row($wpdb->prepare("SELECT password FROM {$wpdb->prefix}lgstudent_students WHERE email = %s", $email));
+		$user = $wpdb->get_row($wpdb->prepare("SELECT password FROM {$wpdb->prefix}" . self::$students_table . " WHERE email = %s", $email));
 		if($user == NULL)
 			return false;
 		else
@@ -56,7 +55,7 @@ class LGDB
 	function setPassword($email, $pass)
 	{
 		global $wpdb;
-		return $wpdb->update("{$wpdb->prefix}lgstudent_students", array("password" => password_hash($pass, PASSWORD_DEFAULT)), array("email" => $email)) !== false;
+		return $wpdb->update("{$wpdb->prefix}" . self::$students_table . "", array("password" => password_hash($pass, PASSWORD_DEFAULT)), array("email" => $email)) !== false;
 	}
 	
 	function resetPassword($email)
@@ -77,26 +76,26 @@ class LGDB
 	function getAllStudents()
 	{
 		global $wpdb;
-		return $wpdb->get_results("SELECT email, firstName, lastName FROM {$wpdb->prefix}lgstudent_students ORDER BY lastName");
+		return $wpdb->get_results("SELECT email, firstName, lastName FROM {$wpdb->prefix}" . self::$students_table . " ORDER BY lastName");
 	}
 	
 	function getStudentByEmail($email)
 	{
 		global $wpdb;
-		return $wpdb->get_row($wpdb->prepare("SELECT email, firstName, lastName FROM {$wpdb->prefix}lgstudent_students WHERE email = %s", $email));
+		return $wpdb->get_row($wpdb->prepare("SELECT email, firstName, lastName FROM {$wpdb->prefix}" . self::$students_table . " WHERE email = %s", $email));
 	}
 	
 	function getStudentByHashedEmail($email)
 	{
 		global $wpdb;
-		return $wpdb->get_row($wpdb->prepare("SELECT email FROM {$wpdb->prefix}lgstudent_students WHERE MD5(email) = %s", $email));
+		return $wpdb->get_row($wpdb->prepare("SELECT email FROM {$wpdb->prefix}" . self::$students_table . " WHERE MD5(email) = %s", $email));
 	}
 	
 	function addStudent($email, $fname, $lname)
 	{
 		global $wpdb;
 		
-		$insert = $wpdb->insert("{$wpdb->prefix}lgstudent_students", array
+		$insert = $wpdb->insert("{$wpdb->prefix}" . self::$students_table . "", array
 		(
 			"email"		=> $email,
 			"password"	=> password_hash(substr(md5(time()), 0, 10), PASSWORD_DEFAULT),
@@ -111,9 +110,9 @@ class LGDB
 	{
 		global $wpdb;
 		
-		$result = $wpdb->delete("{$wpdb->prefix}lgstudent_students", array("email" => $email));
+		$result = $wpdb->delete("{$wpdb->prefix}" . self::$students_table . "", array("email" => $email));
 		if($result !== false)
-			$result = $wpdb->delete("{$wpdb->prefix}lgstudent_grades", array("user" => $email));
+			$result = $wpdb->delete("{$wpdb->prefix}" . self::$grades_table . "", array("user" => $email));
 		
 		return $result !== false;
 	}
