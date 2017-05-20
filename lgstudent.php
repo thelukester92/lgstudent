@@ -98,22 +98,40 @@ class LGStudent
 			$user = $this->db->getStudentByEmail($_POST["email"]);
 			if($user !== NULL)
 			{
+				$hash = md5($user->email);
+				$url = (isset($_SERVER["HTTPS"]) ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . strtok($_SERVER["REQUEST_URI"], "?") . "?reset_password=$hash&nonce=" . wp_create_nonce("reset-password-$hash");
+				$author = LGUtil::adminData();
+				
+				$paras   = array();
+				$paras[] = "$user->firstName,";
+				$paras[] = "It appears you would like to reset your password. If you would like to proceed, please click on the following link. If you did not begin this process, you may ignore this email.";
+				$paras[] = "<a href=\"$url\">Click Here to Reset Your Password</a>";
+				$paras[] = "Sincerely,";
+				$paras[] = "$author->first_name $author->last_name";
+				
 				LGMailer::mailer()
 					->to($user->email)
 					->subject("Reset Password")
-					->message("Please visit the following link to finish resetting your password:\n\nhttp://$_SERVER[HTTP_HOST]" . strtok($_SERVER["REQUEST_URI"], "?") . "?reset_password=" . md5($_POST["email"]))
+					->message(implode("<br /><br />", $paras))
 					->send();
 			}
 			$message = "Please check your email to finish resetting your password.";
 			$die = true;
 		}
 		
-		if(isset($_GET["reset_password"]))
+		if(isset($_GET["reset_password"], $_GET["nonce"]))
 		{
 			$user = $this->db->getStudentByHashedEmail($_GET["reset_password"]);
-			if($user !== NULL)
+			$hash = md5($user->email);
+			if($user !== NULL && wp_verify_nonce($_GET["nonce"], "reset-password-$hash"))
+			{
 				$this->db->resetPassword($user->email);
-			$message = "Your password has been reset. Please check your email for your new password.";
+				$message = "Your password has been reset. Please check your email for your new password.";
+			}
+			else
+			{
+				$error = "Invalid nonce! If you were attempting to reset your password, please start over.";
+			}
 			$die = true;
 		}
 		
