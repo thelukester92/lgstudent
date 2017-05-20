@@ -40,9 +40,14 @@ class LGStudent
 			array("save_post", 10, 2),
 			"wp_head",
 			"admin_head",
+			"admin_enqueue_scripts",
 			"add_meta_boxes_post",
 			"add_meta_boxes_lgstudent_assignment",
 			array("admin_menu", 9)
+		);
+		
+		$filters = array(
+			"upload_mimes"
 		);
 		
 		$shortcode_prefix = "lg";
@@ -66,6 +71,11 @@ class LGStudent
 			}
 			else
 				add_action($action, array(&$this, $action));
+		}
+		
+		foreach($filters as $filter)
+		{
+			add_filter($filter, array(&$this, $filter));
 		}
 		
 		foreach($shortcodes as $shortcode)
@@ -346,11 +356,6 @@ class LGStudent
 		{
 			$lines		= explode("\n", $questions[$i]);
 			$question	= array_shift($lines);
-			/* $lines		= array_map(function($line)
-			{
-				return preg_replace("/^(<p>)?>\s([^\n]+)/", '<span class="lgstudent-comment">$2</span>', $line);
-			}, $lines); */
-			
 			$inside		= implode("\n", $lines);
 			$inside		= preg_replace("/\n\n+/", "\n", $inside);
 			
@@ -515,6 +520,17 @@ class LGStudent
 			</div><br />
 		<?php endif;
 		return ob_get_clean();
+	}
+	
+	// MARK: Wordpress filters
+	
+	function upload_mimes($mimes)
+	{
+		$mimes["java"]	= "text/x-java-source";
+		$mimes["js"]	= "application/javascript";
+		$mimes["tar"]	= "application/x-tar";
+		$mimes["zip"]	= "application/zip";
+		return $mimes;
 	}
 	
 	// MARK: Wordpress actions
@@ -704,6 +720,22 @@ class LGStudent
 	function admin_head()
 	{
 		$this->wp_head();
+		?>
+		<script type="text/javascript">
+			jQuery(document).ready(function()
+			{
+				jQuery(".datepicker").datepicker({
+					dateFormat: "DD, m/d/yy"
+				});
+			});
+		</script>
+		<?php
+	}
+	
+	function admin_enqueue_scripts()
+	{
+		wp_enqueue_script("jquery-ui-datepicker");
+		wp_enqueue_style("jquery-ui-datepicker-style", "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css");
 	}
 	
 	function add_meta_boxes_post()
@@ -744,7 +776,7 @@ class LGStudent
 		
 		<div class="lgstudent-field">
 			<label for="lgstudent_assignment_expdate">Due Date</label><br />
-			<input type="text" name="lgstudent_assignment_expdate" value="<?=$exp?>" />
+			<input type="text" name="lgstudent_assignment_expdate" class="datepicker" value="<?=$exp?>" />
 		</div>
 		<div style="clear: both;"</div><br />
 		
