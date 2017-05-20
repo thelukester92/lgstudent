@@ -11,7 +11,6 @@
 
 if(!defined("ABSPATH")) exit;
 
-require_once "inc/password.php";
 require_once "inc/lgdb.php";
 require_once "inc/lgmailer.php";
 require_once "inc/lgmarkdown.php";
