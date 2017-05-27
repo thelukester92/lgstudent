@@ -47,7 +47,8 @@ class LGStudent
 		);
 		
 		$filters = array(
-			"upload_mimes"
+			"upload_mimes",
+			array("the_content", 0)
 		);
 		
 		$shortcode_prefix = "lg";
@@ -75,7 +76,10 @@ class LGStudent
 		
 		foreach($filters as $filter)
 		{
-			add_filter($filter, array(&$this, $filter));
+			if(is_array($filter))
+				add_filter($filter[0], array(&$this, $filter[0]), $filter[1]);
+			else
+				add_filter($filter, array(&$this, $filter));
 		}
 		
 		foreach($shortcodes as $shortcode)
@@ -363,20 +367,22 @@ class LGStudent
 			{
 				$inside = LGMarkdown::parseExtended($inside);
 				if($n > 2)
-					$content .= "<h2>Question $i: $question</h2>$inside";
+					$content .= "<h2>Question $i: " . LGMarkdown::parse($question) . "</h2>$inside";
 				else
-					$content .= "<h2>$question</h2>$inside";
+					$content .= "<h2>" . LGMarkdown::parse($question) . "</h2>$inside";
 			}
 			else
 			{
 				$content .= LGMarkdown::parse($inside);
 			}
 		}
-		?>
 		
-		<?=do_shortcode($content)?>
+		$content = do_shortcode($content);
+		if(class_exists("CrayonWP"))
+			$content = CrayonWP::highlight($content);
 		
-		<?php
+		echo $content;
+		
 		if(!$this->currentExp) :
 		?>
 			<div class="lgstudent-field">
@@ -426,7 +432,7 @@ class LGStudent
 	function shortcode_radio($atts, $content = null)
 	{
 		ob_start();
-		$lines = array_values(array_filter(explode("\n", strip_tags($content, "<code><span>")), function($line) { return trim($line) != false; }));
+		$lines = explode("\n", strip_tags($content, "<pre><code><span>"));
 		?>
 		<div class="lgstudent-assignment-field">
 			<?php
@@ -457,7 +463,7 @@ class LGStudent
 				}
 				else
 				{
-					echo $line;
+					echo "$line\n";
 				}
 			}
 			?>
@@ -470,7 +476,7 @@ class LGStudent
 	function shortcode_checkbox($atts, $content = null)
 	{
 		ob_start();
-		$lines = array_values(array_filter(explode("\n", strip_tags($content, "<code><span>")), function($line) { return trim($line) != false; }));
+		$lines = array_values(array_filter(explode("\n", strip_tags($content, "<pre><code><span>")), function($line) { return trim($line) != false; }));
 		?>
 		<div class="lgstudent-assignment-field">
 			<?php
@@ -531,6 +537,13 @@ class LGStudent
 		$mimes["tar"]	= "application/x-tar";
 		$mimes["zip"]	= "application/zip";
 		return $mimes;
+	}
+	
+	function the_content($content)
+	{
+		if(get_post_type() == "lgstudent_assignment")
+			remove_filter("the_content", "wpautop");
+		return $content;
 	}
 	
 	// MARK: Wordpress actions
@@ -695,6 +708,7 @@ class LGStudent
 				padding-left:	10px;
 				border-left:	3px solid #666;
 				color:			#666;
+				margin:			1em 0;
 			}
 			.lgstudent-form h2
 			{
