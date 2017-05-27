@@ -4,12 +4,7 @@ if(!defined("ABSPATH")) exit;
 
 class LGMarkdown
 {
-	const MATCH_LIST	= "/^\*\s(.*)/";
-	const MATCH_PRE		= "/^\s{4}(.*)/";
-	const MATCH_COMMENT	= "/^>\s(.*)/";
-	const MATCH_EM1		= "/\*([^\*]*)\*/";
-	const MATCH_EM2		= "/\*\*([^\*]*)\*\*/";
-	const MATCH_CODE	= "/`([^`]*)`/";
+	const MATCH_LIST = "/^\*\s([^\n]*)/";
 	
 	private static function doLists($str)
 	{
@@ -116,9 +111,27 @@ class LGMarkdown
 		// $str = self::doComments($str);
 		// $str = self::doEmphases($str);
 		
-		$str = self::doLists($str);
+		// $str = self::doBlock($str);
+		// $str = self::doInline($str);
 		
-		return $str;
+		$output = "";
+		
+		$paras = explode("\n\n", str_replace("\r", "", $str));
+		foreach($paras as $para)
+		{
+			if(preg_match(self::MATCH_LIST, $para))
+			{
+				$lines = explode("\n", $para);
+				foreach($lines as &$line)
+					if(preg_match(self::MATCH_LIST, $line, $matches))
+						$line = "<li>$matches[1]</li>";
+				$output .= "<ul>" . implode("\n", $lines) . "</ul>";
+			}
+			else
+				$output .= "<p>$para</p>";
+		}
+		
+		return $output;
 	}
 	
 	/// Special markdown for assignments
