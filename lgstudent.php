@@ -463,7 +463,7 @@ class LGStudent
 				}
 				else
 				{
-					echo "$line\n";
+					echo $line;
 				}
 			}
 			?>

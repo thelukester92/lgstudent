@@ -4,6 +4,13 @@ if(!defined("ABSPATH")) exit;
 
 class LGMarkdown
 {
+	const MATCH_LIST	= "/^\*\s(.*)/";
+	const MATCH_PRE		= "/^\s{4}(.*)/";
+	const MATCH_COMMENT	= "/^>\s(.*)/";
+	const MATCH_EM1		= "/\*([^\*]*)\*/";
+	const MATCH_EM2		= "/\*\*([^\*]*)\*\*/";
+	const MATCH_CODE	= "/`([^`]*)`/";
+	
 	private static function doLists($str)
 	{
 		$list = false;
@@ -43,21 +50,21 @@ class LGMarkdown
 			{
 				$line = "$matches[1]";
 				if(!$pre)
-					$line = "<pre>\n$line";
+					$line = "<pre>$line";
 				$pre = true;
 			}
 			else if($pre)
 			{
-				$line = "</pre>\n$line";
+				$line = "</pre>$line";
 				$pre = false;
 			}
 		}
 		
 		$output = implode("\n", $lines);
 		if($pre)
-			$output = "$output\n</pre>";
+			$output = "$output</pre>";
 		
-		return $output;
+		return preg_replace("/\s+<\/pre>/", "</pre>", $output);
 	}
 	
 	private static function doComments($str)
@@ -71,19 +78,19 @@ class LGMarkdown
 			{
 				$line = "$matches[1]";
 				if(!$comment)
-					$line = "<span class=\"lgstudent-comment\">\n$line";
+					$line = "<span class=\"lgstudent-comment\">$line";
 				$comment = true;
 			}
 			else if($comment)
 			{
-				$line = "</span>\n$line";
+				$line = "</span>$line";
 				$comment = false;
 			}
 		}
 		
 		$output = implode("\n", $lines);
 		if($comment)
-			$output = "$output\n</span>";
+			$output = "$output</span>";
 		
 		return $output;
 	}
@@ -105,9 +112,12 @@ class LGMarkdown
 	/// Regular markdown
 	static function parse($str)
 	{
+		// $str = self::doLists($str);
+		// $str = self::doComments($str);
+		// $str = self::doEmphases($str);
+		
 		$str = self::doLists($str);
-		$str = self::doComments($str);
-		$str = self::doEmphases($str);
+		
 		return $str;
 	}
 	
