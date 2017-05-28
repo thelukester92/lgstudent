@@ -19,6 +19,7 @@ class LGMarkdown
 	const MATCH_RADIO_C	= "/^\(\*\)\s([^\n]*)/";
 	const MATCH_CHECK	= "/^\[\*?\]\s([^\n]*)/";
 	const MATCH_CHECK_C	= "/^\[\*\]\s([^\n]*)/";
+	const MATCH_TEXT	= "/^___([^\n]*)___$/";
 	
 	private static function parseRadioBlock($str, $expired, $questionId)
 	{
@@ -51,7 +52,7 @@ class LGMarkdown
 			if(preg_match(self::MATCH_CHECK, $line, $matches))
 			{
 				$id = "question-{$questionId}[]";
-				$checked = isset($_POST[$id]) && $_POST[$id] == $key ? "checked" : "";
+				$checked = (isset($_POST[$id]) && $_POST[$id] == $key) ? "checked" : "";
 				$correct = preg_match(self::MATCH_CHECK_C, $line) ? "class=\"lgstudent-correct\"" : "";
 				
 				if($expired)
@@ -62,6 +63,22 @@ class LGMarkdown
 			$key = chr(ord($key) + 1);
 		}
 		return "<p>" . implode("\n", $lines) . "</p>";
+	}
+	
+	private static function parseTextarea($str, $expired, $questionId)
+	{
+		$id = "question-$questionId";
+		preg_match(self::MATCH_TEXT, $str, $matches);
+		if(!$expired)
+		{
+			$val = isset($_POST[$id]) ? $_POST[$id] : "";
+			return "<textarea id=\"$id\">$val</textarea>";
+		}
+		else
+		{
+			$val = !empty($matches[1]) ? $matches[1] : "Open Response";
+			return "<pre class=\"ignore:true\">$val</pre>";
+		}
 	}
 	
 	public static function parseBlock($str, $extended = false, $expired = false)
@@ -104,6 +121,8 @@ class LGMarkdown
 				$output .= self::parseRadioBlock($para, $expired, $questionId++);
 			else if($extended && preg_match(self::MATCH_CHECK, $para))
 				$output .= self::parseCheckBlock($para, $expired, $questionId++);
+			else if($extended && preg_match(self::MATCH_TEXT, $para))
+				$output .= self::parseTextarea($para, $expired, $questionId++);
 			else
 				$output .= "<p>$para</p>";
 		}

@@ -26,7 +26,6 @@ class LGStudent
 		flush_rewrite_rules();
 	}
 	
-	private $currentId = 1;
 	private $currentExp;
 	private $db;
 	
@@ -55,7 +54,6 @@ class LGStudent
 		$shortcodes = array(
 			"grades",
 			"form",
-			"textarea",
 			"file"
 		);
 		
@@ -355,11 +353,13 @@ class LGStudent
 		$content = LGMarkdown::parseExtended($content, $this->currentExp);
 		if(class_exists("CrayonWP"))
 			$content = CrayonWP::highlight($content);
-		
-		echo do_shortcode($content);
-		
-		if(!$this->currentExp) :
 		?>
+		
+		<div class="lgstudent-assignment">
+			<?=do_shortcode($content)?>
+		</div>
+		
+		<?php if(!$this->currentExp) : ?>
 			<div class="lgstudent-field">
 				<label for="email">Email</label><br />
 				<input type="text" name="email" />
@@ -379,27 +379,6 @@ class LGStudent
 		</div>
 		<?php endif;
 		
-		return ob_get_clean();
-	}
-	
-	function shortcode_textarea($atts, $content = null)
-	{
-		ob_start();
-		$a = shortcode_atts(array(
-			"class" => "",
-			"pre-class" => "ignore:true"
-		), $atts);
-		?>
-		<div class="lgstudent-assignment-field">
-			<?php if(!$this->currentExp) : ?>
-				<textarea name="question<?=$this->currentId?>" class="<?=$a["class"]?>"><?=$_POST["question{$this->currentId}"]?></textarea>
-			<?php else : ?>
-				<?=CrayonWP::highlight("<pre class='" . $a["pre-class"] . "'>" . preg_replace("/<br\s?\/?>/", "", !empty($content) ? $content : "Open response") . "</pre>")?>
-			<?php endif; ?>
-		</div>
-		<div style="clear: both;"></div><br />
-		<?php
-		$this->currentId++;
 		return ob_get_clean();
 	}
 	
@@ -559,10 +538,11 @@ class LGStudent
 			{
 				margin-left: 2px;
 			}
-			.lgstudent-field textarea, .lgstudent-assignment-field textarea
+			.lgstudent-assignment textarea
 			{
 				width: 100%;
 				height: 100px !important;
+				margin: 1em 0;
 			}
 			.lgstudent-assignment-field .code
 			{
