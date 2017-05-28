@@ -430,6 +430,7 @@ class LGStudent
 		if(get_post_type() == "lgstudent_assignment")
 		{
 			remove_filter("the_content", "wpautop");
+			remove_filter("the_content", "wptexturize");
 			$content = "[lgform]{$content}[/lgform]";
 		}
 		return $content;

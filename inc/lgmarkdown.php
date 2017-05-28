@@ -86,7 +86,7 @@ class LGMarkdown
 				foreach($lines as &$line)
 					if(preg_match(self::MATCH_COMMENT, $line, $matches))
 						$line = $matches[1];
-				$output .= "<span class=\"lgstudent-comment\">" . implode("\n", $lines) . "</span>";
+				$output .= "<span class=\"lgstudent-comment\">" . implode("<br />\n", $lines) . "</span>";
 			}
 			else if(preg_match(self::MATCH_PRE, $para))
 			{
