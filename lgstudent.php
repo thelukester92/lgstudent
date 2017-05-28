@@ -301,9 +301,9 @@ class LGStudent
 		if(!empty($exp))
 		{
 			if(current_time("timestamp") > strtotime($exp)) : $this->currentExp = true; ?>
-				<strong style="display: block;">No longer accepting submissions; was due <?=date('l, F j, Y \a\t g:ia', $meta["lgstudent_assignment_expdate"][0])?></strong><br />
+				<strong style="display: block;">No longer accepting submissions; was due <?=date('l, F j, Y \a\t g:ia', $meta["lgstudent_assignment_expdate"][0])?></strong>
 			<?php else : ?>
-				<strong style="display: block;">Due <?=date('l, F j, Y \a\t g:ia', $meta["lgstudent_assignment_expdate"][0])?></strong><br />
+				<strong style="display: block;">Due <?=date('l, F j, Y \a\t g:ia', $meta["lgstudent_assignment_expdate"][0])?></strong>
 			<?php endif;
 		}
 		
@@ -352,32 +352,7 @@ class LGStudent
 			<div class="lgstudent-form">
 		<?php endif;
 		
-		$questions = explode("# ", $content);
-		$content = "";
-		
-		$n = count($questions);
-		for($i = 0; $i < $n; ++$i)
-		{
-			$lines		= explode("\n", $questions[$i]);
-			$question	= array_shift($lines);
-			$inside		= implode("\n", $lines);
-			$inside		= preg_replace("/\n\n+/", "\n", $inside);
-			
-			if($i > 0)
-			{
-				$inside = LGMarkdown::parseExtended($inside);
-				if($n > 2)
-					$content .= "<h2>Question $i: " . LGMarkdown::parse($question) . "</h2>$inside";
-				else
-					$content .= "<h2>" . LGMarkdown::parse($question) . "</h2>$inside";
-			}
-			else
-			{
-				$content .= LGMarkdown::parse($inside);
-			}
-		}
-		
-		$content = do_shortcode($content);
+		$content = LGMarkdown::parseExtended($content, $this->currentExp);
 		if(class_exists("CrayonWP"))
 			$content = CrayonWP::highlight($content);
 		
@@ -710,12 +685,18 @@ class LGStudent
 				color:			#666;
 				margin:			1em 0;
 			}
-			.lgstudent-form h2
+			.lgstudent-form h1
 			{
 				font-size:		1.2em;
 				margin:			0;
-				padding:		10px 0 0 0;
+				padding:		1em 0;
 				border-top:		3px solid #666;
+			}
+			.lgstudent-form h2
+			{
+				font-size:		1.5em;
+				margin:			0 0 1em 0;
+				padding:		0;
 			}
 			.lgstudent-form code
 			{
