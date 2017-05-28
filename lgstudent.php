@@ -56,8 +56,6 @@ class LGStudent
 			"grades",
 			"form",
 			"textarea",
-			"radio",
-			"checkbox",
 			"file"
 		);
 		
@@ -301,9 +299,9 @@ class LGStudent
 		if(!empty($exp))
 		{
 			if(current_time("timestamp") > strtotime($exp)) : $this->currentExp = true; ?>
-				<strong style="display: block;">No longer accepting submissions; was due <?=date('l, F j, Y \a\t g:ia', $meta["lgstudent_assignment_expdate"][0])?></strong>
+				<strong style="display: block;">No longer accepting submissions; was due <?=date('l, F j, Y \a\t g:ia', $meta["lgstudent_assignment_expdate"][0])?></strong><br />
 			<?php else : ?>
-				<strong style="display: block;">Due <?=date('l, F j, Y \a\t g:ia', $meta["lgstudent_assignment_expdate"][0])?></strong>
+				<strong style="display: block;">Due <?=date('l, F j, Y \a\t g:ia', $meta["lgstudent_assignment_expdate"][0])?></strong><br />
 			<?php endif;
 		}
 		
@@ -356,7 +354,7 @@ class LGStudent
 		if(class_exists("CrayonWP"))
 			$content = CrayonWP::highlight($content);
 		
-		echo $content;
+		echo do_shortcode($content);
 		
 		if(!$this->currentExp) :
 		?>
@@ -404,94 +402,6 @@ class LGStudent
 		return ob_get_clean();
 	}
 	
-	function shortcode_radio($atts, $content = null)
-	{
-		ob_start();
-		$lines = explode("\n", strip_tags($content, "<pre><code><span>"));
-		?>
-		<div class="lgstudent-assignment-field">
-			<?php
-			$i = 0;
-			foreach($lines as $line)
-			{
-				$correct = false;
-				if(preg_match("/^\*\*\s/", trim($line)))
-				{
-					$correct = true;
-					$line = substr(strstr(trim($line), "*"), 1);
-				}
-				
-				if(preg_match("/^\*\s/", trim($line)))
-				{
-					$val = substr(strstr($line, "*"), 2);
-					$key = chr(ord('a') + $i); 
-					
-					if(!$this->currentExp) : ?>
-						<input type="radio" name="question<?=$this->currentId?>" value="<?=$key?>" <?=(isset($_POST["question{$this->currentId}"]) && $_POST["question{$this->currentId}"] == $key ? "checked" : "")?> /> <?=$key?>) <?=$val?><br />
-					<?php elseif($correct) : ?>
-						<span class="lgstudent-correct"><?=$key?>) <?=$val?></span><br />
-					<?php else : ?>
-						<?=$key?>) <?=$val?><br />
-					<?php endif;
-					
-					$i++;
-				}
-				else
-				{
-					echo $line;
-				}
-			}
-			?>
-		</div><br />
-		<?php
-		$this->currentId++;
-		return ob_get_clean();
-	}
-	
-	function shortcode_checkbox($atts, $content = null)
-	{
-		ob_start();
-		$lines = array_values(array_filter(explode("\n", strip_tags($content, "<pre><code><span>")), function($line) { return trim($line) != false; }));
-		?>
-		<div class="lgstudent-assignment-field">
-			<?php
-			$i = 0;
-			foreach($lines as $line)
-			{
-				$correct = false;
-				if(preg_match("/^\[\*\]\s/", trim($line)))
-				{
-					$correct = true;
-					$line = "[]" . substr(strstr(trim($line), "[*]"), 3);
-				}
-				
-				if(preg_match("/^\[\]\s/", trim($line)))
-				{
-					$val = substr(strstr($line, "[]"), 2);
-					$key = chr(ord('a') + $i);
-					
-					if(!$this->currentExp) : ?>
-						<input type="checkbox" name="question<?=$this->currentId?>[]" value="<?=$key?>" <?=(isset($_POST["question{$this->currentId}"]) && in_array($key, $_POST["question{$this->currentId}"]) ? "checked" : "")?> /> <?=$key?>) <?=$val?><br />
-					<?php elseif($correct) : ?>
-						<span class="lgstudent-correct"><?=$key?>) <?=$val?></span><br />
-					<?php else : ?>
-						<?=$key?>) <?=$val?><br />
-					<?php endif;
-					
-					$i++;
-				}
-				else
-				{
-					echo $line;
-				}
-			}
-			?>
-		</div><br />
-		<?php
-		$this->currentId++;
-		return ob_get_clean();
-	}
-	
 	function shortcode_file()
 	{
 		ob_start();
@@ -517,7 +427,10 @@ class LGStudent
 	function the_content($content)
 	{
 		if(get_post_type() == "lgstudent_assignment")
+		{
 			remove_filter("the_content", "wpautop");
+			$content = "[lgform]{$content}[/lgform]";
+		}
 		return $content;
 	}
 	
