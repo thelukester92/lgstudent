@@ -316,7 +316,8 @@ class LGStudent
 				foreach($_POST as $key => $val)
 				{
 					if(is_array($val))
-						$val = implode(",", $val);
+						$val = implode(", ", $val);
+					$val = str_replace("\n", "<br />", stripslashes(strip_tags($val)));
 					
 					if($key != "email" && $key != "pass")
 					{
@@ -390,7 +391,6 @@ class LGStudent
 		), $atts);
 		?>
 		<div class="lgstudent-assignment-field">
-			<br />
 			<?php if(!$this->currentExp) : ?>
 				<textarea name="question<?=$this->currentId?>" class="<?=$a["class"]?>"><?=$_POST["question{$this->currentId}"]?></textarea>
 			<?php else : ?>
@@ -603,8 +603,8 @@ class LGStudent
 			.lgstudent-form h1
 			{
 				font-size:		1.2em;
-				margin:			0;
-				padding:		1em 0;
+				margin:			0 0 1em 0;
+				padding:		1em 0 0 0;
 				border-top:		3px solid #666;
 			}
 			.lgstudent-form h2
