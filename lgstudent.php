@@ -320,7 +320,8 @@ class LGStudent
 					
 					if($key != "email" && $key != "pass")
 					{
-						$submission .= "$key\n$val\n\n";
+						$parts = explode("-", $key);
+						$submission .= "<p>Question $parts[1]:<br />$val</p>";
 					}
 				}
 				
