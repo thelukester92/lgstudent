@@ -72,7 +72,7 @@ class LGMarkdown
 		if(!$expired)
 		{
 			$val = isset($_POST[$id]) ? $_POST[$id] : "";
-			return "<textarea id=\"$id\">$val</textarea>";
+			return "<textarea name=\"$id\">$val</textarea>";
 		}
 		else
 		{
