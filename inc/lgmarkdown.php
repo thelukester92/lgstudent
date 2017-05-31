@@ -19,7 +19,7 @@ class LGMarkdown
 	const MATCH_RADIO_C	= "/^\(\*\)\s([^\n]*)/";
 	const MATCH_CHECK	= "/^\[\*?\]\s([^\n]*)/";
 	const MATCH_CHECK_C	= "/^\[\*\]\s([^\n]*)/";
-	const MATCH_TEXT	= "/^___([^\n]*)___$/";
+	const MATCH_TEXT	= "/^___(.*)___$/s";
 	
 	private static function parseRadioBlock($str, $expired, $questionId)
 	{
